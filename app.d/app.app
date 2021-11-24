@@ -1,0 +1,9 @@
+type=script
+scriptType=python
+enabled=true
+id=real-time-fraud-detection
+name=Credit card fraud detection
+file_0=./data_exploration.py
+file_1=./neighborhood_distance.py
+file_2=./static_model.py
+file_3=./live_predictions.py
