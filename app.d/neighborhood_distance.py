@@ -1,4 +1,4 @@
-from deephaven.TableTools import readCsv
+from deephaven import read_csv
 from deephaven import Plot
 
 from deephaven import tableToDataFrame
@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 # Read external data, remove unwanted parts, and split into train/test
-creditcard = readCsv("/data/examples/CreditCardFraud/csv/creditcard.csv")
+creditcard = read_csv("/data/examples/CreditCardFraud/csv/creditcard.csv")
 creditcard = creditcard.select("Time", "V4", "V12", "V14", "Amount", "Class")
 train_data = creditcard.where("Time >= 43200 && Time < 57600")
 test_data = tableToDataFrame(creditcard.where("Time >= 129600 && Time < 144000"))

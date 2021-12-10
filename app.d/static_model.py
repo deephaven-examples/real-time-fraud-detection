@@ -1,9 +1,10 @@
 # Deephaven imports
-replayer = jpy.get_type("io.deephaven.db.v2.replay.Replayer")
-from deephaven import DBTimeUtils as dbtu
-from deephaven.TableTools import readCsv
+replayer = jpy.get_type("io.deephaven.engine.table.impl.replay.Replayer")
+import deephaven.DateTimeUtils as dbtu
+from deephaven import read_csv
 from deephaven import dataFrameToTable
 from deephaven import tableToDataFrame
+from deephaven.learn import gather
 from deephaven import learn
 
 # Python imports
@@ -14,22 +15,21 @@ import numpy as np
 import scipy as sp
 
 # Read external data, remove unwanted parts, and split into train/test
-creditcard = readCsv("/data/examples/CreditCardFraud/csv/creditcard.csv")
+creditcard = read_csv("/data/examples/CreditCardFraud/csv/creditcard.csv")
 creditcard = creditcard.select("Time", "V4", "V12", "V14", "Amount", "Class")
 train_data = creditcard.where("Time >= 43200 && Time < 57600")
 test_data = creditcard.where("Time >= 129600 && Time < 144000")
 
 # This base time will be used to generate time stamps
 base_time = dbtu.convertDateTime("2021-11-16T00:00:00 NY")
-
 # This function will create a timestamp column from the time offset column
 def timestamp_from_offset(t):
     global base_time
     db_period = "T{}S".format(t)
-    return dbtu.plus(base_time, dbtu.DBPeriod(db_period))
+    return dbtu.plus(base_time, dbtu.Period(db_period))
 
 # Add a timestamp column to the test data for later replay
-test_data = test_data.update("TimeStamp = (DBDateTime)timestamp_from_offset(Time)")
+test_data = test_data.update("TimeStamp = (DateTime)timestamp_from_offset(Time)")
 
 # This placeholder will be replaced by our trained DBSCAN model
 db = 0
@@ -41,22 +41,8 @@ def perform_dbscan(data):
     return db.labels_
 
 # Our gather function for DBSCAN
-def dbscan_gather(idx, cols):
-    gathered = np.empty([idx.getSize(), len(cols)], dtype = float)
-    iter = idx.iterator()
-    i = 0
-
-    while(iter.hasNext()):
-        it = iter.next()
-        j = 0
-
-        for col in cols:
-            gathered[i, j] = col.get(it)
-            j += 1
-
-        i += 1
-
-    return np.squeeze(gathered)
+def dbscan_gather(rows, cols):
+    return gather.table_to_numpy_2d(rows, cols, dtype = np.double)
 
 # Our scatter function for DBSCAN
 def dbscan_scatter(data, idx):

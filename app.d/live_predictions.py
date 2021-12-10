@@ -10,7 +10,7 @@ creditcard_live = creditcard_live.view("Time", "V4", "V12", "V14", "Amount", "Cl
 # A function to place new observations into our existing clusters
 def dbscan_predict(X_new):
     n_rows = X_new.shape[0]
-    data_with_new = np.vstack([dbscanned, X_new])
+    data_with_new = np.vstack([data, X_new])
     tree = kdtree(data_with_new)
     dists, points = tree.query(data_with_new, 10)
     dists = dists[-n_rows:]
@@ -21,19 +21,8 @@ def dbscan_predict(X_new):
     return np.array(detected_fraud)
 
 # A function to gather data from a Deephaven table into a NumPy array
-def gather(idx, cols):
-    rst = np.empty([idx.getSize(), len(cols)], dtype = np.single)
-    iter = idx.iterator()
-    i = 0
-    while (iter.hasNext()):
-        it = iter.next()
-        j = 0
-        for col in cols:
-            rst[i, j] = col.get(it)
-            j += 1
-        i += 1
-
-    return np.squeeze(rst)
+def table_to_numpy(rows, cols):
+    return gather.table_to_numpy_2d(rows, cols, dtype = np.double)
 
 # A function to scatter data back into an output table
 def scatter(data, idx):
@@ -42,7 +31,7 @@ def scatter(data, idx):
 predicted_fraud_live = learn.learn(
     table = creditcard_live,
     model_func = dbscan_predict,
-    inputs = [learn.Input(["V4", "V12", "V14"], gather)],
+    inputs = [learn.Input(["V4", "V12", "V14"], table_to_numpy)],
     outputs = [learn.Output("PredictedClass", scatter, "short")],
     batch_size = 1000
 )
