@@ -1,9 +1,10 @@
 # Deephaven imports
 replayer = jpy.get_type("io.deephaven.db.v2.replay.Replayer")
-from deephaven import DBTimeUtils as dbtu
+from deephaven import DateTimeUtils as dtu
 from deephaven.TableTools import readCsv
 from deephaven import dataFrameToTable
 from deephaven import tableToDataFrame
+from deephaven.learn import gather
 from deephaven import learn
 
 # Python imports
@@ -20,13 +21,13 @@ train_data = creditcard.where("Time >= 43200 && Time < 57600")
 test_data = creditcard.where("Time >= 129600 && Time < 144000")
 
 # This base time will be used to generate time stamps
-base_time = dbtu.convertDateTime("2021-11-16T00:00:00 NY")
+base_time = dtu.convertDateTime("2021-11-16T00:00:00 NY")
 
 # This function will create a timestamp column from the time offset column
 def timestamp_from_offset(t):
     global base_time
     db_period = "T{}S".format(t)
-    return dbtu.plus(base_time, dbtu.DBPeriod(db_period))
+    return dtu.plus(base_time, dtu.DBPeriod(db_period))
 
 # Add a timestamp column to the test data for later replay
 test_data = test_data.update("TimeStamp = (DBDateTime)timestamp_from_offset(Time)")
@@ -41,22 +42,8 @@ def perform_dbscan(data):
     return db.labels_
 
 # Our gather function for DBSCAN
-def dbscan_gather(idx, cols):
-    gathered = np.empty([idx.getSize(), len(cols)], dtype = float)
-    iter = idx.iterator()
-    i = 0
-
-    while(iter.hasNext()):
-        it = iter.next()
-        j = 0
-
-        for col in cols:
-            gathered[i, j] = col.get(it)
-            j += 1
-
-        i += 1
-
-    return np.squeeze(gathered)
+def dbscan_gather(rows, cols):
+    return gather.table_to_numpy_2d(rows, cols, dtype = np.double)
 
 # Our scatter function for DBSCAN
 def dbscan_scatter(data, idx):
@@ -80,7 +67,7 @@ dbscan_false_positives = clustered.where("Class == 0 && PredictedClass == 1")
 dbscan_false_negatives = clustered.where("Class == 1 && PredictedClass == 0")
 
 # Report the accuracy of the model
-print("DBSCAN guesses valid - correct! " + str(dbscan_correct_valid.size()))
-print("DBSCAN guesses fraud - correct! " + str(dbscan_correct_fraud.size()))
-print("DBSCAN guesses valid - wrong! " + str(dbscan_false_positives.size()))
-print("DBSCAN guesses fraud - wrong! " + str(dbscan_false_negatives.size()))
+print("DBSCAN guesses valid - correct! " + str(dbscan_correct_valid.intSize()))
+print("DBSCAN guesses fraud - correct! " + str(dbscan_correct_fraud.intSize()))
+print("DBSCAN guesses valid - wrong! " + str(dbscan_false_positives.intSize()))
+print("DBSCAN guesses fraud - wrong! " + str(dbscan_false_negatives.intSize()))
