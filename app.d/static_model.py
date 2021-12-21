@@ -2,6 +2,7 @@
 replayer = jpy.get_type("io.deephaven.engine.table.impl.replay.Replayer")
 import deephaven.DateTimeUtils as dbtu
 from deephaven import read_csv
+
 from deephaven import dataFrameToTable
 from deephaven import tableToDataFrame
 from deephaven.learn import gather
@@ -22,11 +23,13 @@ test_data = creditcard.where("Time >= 129600 && Time < 144000")
 
 # This base time will be used to generate time stamps
 base_time = dbtu.convertDateTime("2021-11-16T00:00:00 NY")
+
 # This function will create a timestamp column from the time offset column
 def timestamp_from_offset(t):
     global base_time
     db_period = "T{}S".format(t)
     return dbtu.plus(base_time, dbtu.Period(db_period))
+
 
 # Add a timestamp column to the test data for later replay
 test_data = test_data.update("TimeStamp = (DateTime)timestamp_from_offset(Time)")
@@ -66,7 +69,7 @@ dbscan_false_positives = clustered.where("Class == 0 && PredictedClass == 1")
 dbscan_false_negatives = clustered.where("Class == 1 && PredictedClass == 0")
 
 # Report the accuracy of the model
-print("DBSCAN guesses valid - correct! " + str(dbscan_correct_valid.size()))
-print("DBSCAN guesses fraud - correct! " + str(dbscan_correct_fraud.size()))
-print("DBSCAN guesses valid - wrong! " + str(dbscan_false_positives.size()))
-print("DBSCAN guesses fraud - wrong! " + str(dbscan_false_negatives.size()))
+print("DBSCAN guesses valid - correct! " + str(dbscan_correct_valid.intSize()))
+print("DBSCAN guesses fraud - correct! " + str(dbscan_correct_fraud.intSize()))
+print("DBSCAN guesses valid - wrong! " + str(dbscan_false_positives.intSize()))
+print("DBSCAN guesses fraud - wrong! " + str(dbscan_false_negatives.intSize()))

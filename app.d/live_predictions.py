@@ -21,7 +21,8 @@ def dbscan_predict(X_new):
     return np.array(detected_fraud)
 
 # A function to gather data from a Deephaven table into a NumPy array
-def table_to_numpy(rows, cols):
+
+def live_gather(rows, cols):
     return gather.table_to_numpy_2d(rows, cols, dtype = np.double)
 
 # A function to scatter data back into an output table
@@ -31,7 +32,8 @@ def scatter(data, idx):
 predicted_fraud_live = learn.learn(
     table = creditcard_live,
     model_func = dbscan_predict,
-    inputs = [learn.Input(["V4", "V12", "V14"], table_to_numpy)],
+
+    inputs = [learn.Input(["V4", "V12", "V14"], live_gather)],
     outputs = [learn.Output("PredictedClass", scatter, "short")],
     batch_size = 1000
 )
