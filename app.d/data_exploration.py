@@ -1,9 +1,9 @@
 # Required imports
-from deephaven.TableTools import readCsv
+from deephaven import read_csv
 from deephaven import Plot
 
 # Read the CSV file into a Deephaven table
-creditcard = readCsv("/data/examples/CreditCardFraud/csv/creditcard.csv")
+creditcard = read_csv("/data/examples/CreditCardFraud/csv/creditcard.csv")
 
 def plot_valid_vs_fraud(col_name):
     # Set the creditcard table as global to make sure we can access it for the plot

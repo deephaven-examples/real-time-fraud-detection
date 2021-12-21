@@ -1,7 +1,8 @@
 # Deephaven imports
-replayer = jpy.get_type("io.deephaven.db.v2.replay.Replayer")
-from deephaven import DateTimeUtils as dtu
-from deephaven.TableTools import readCsv
+replayer = jpy.get_type("io.deephaven.engine.table.impl.replay.Replayer")
+import deephaven.DateTimeUtils as dbtu
+from deephaven import read_csv
+
 from deephaven import dataFrameToTable
 from deephaven import tableToDataFrame
 from deephaven.learn import gather
@@ -15,22 +16,23 @@ import numpy as np
 import scipy as sp
 
 # Read external data, remove unwanted parts, and split into train/test
-creditcard = readCsv("/data/examples/CreditCardFraud/csv/creditcard.csv")
+creditcard = read_csv("/data/examples/CreditCardFraud/csv/creditcard.csv")
 creditcard = creditcard.select("Time", "V4", "V12", "V14", "Amount", "Class")
 train_data = creditcard.where("Time >= 43200 && Time < 57600")
 test_data = creditcard.where("Time >= 129600 && Time < 144000")
 
 # This base time will be used to generate time stamps
-base_time = dtu.convertDateTime("2021-11-16T00:00:00 NY")
+base_time = dbtu.convertDateTime("2021-11-16T00:00:00 NY")
 
 # This function will create a timestamp column from the time offset column
 def timestamp_from_offset(t):
     global base_time
     db_period = "T{}S".format(t)
-    return dtu.plus(base_time, dtu.DBPeriod(db_period))
+    return dbtu.plus(base_time, dbtu.Period(db_period))
+
 
 # Add a timestamp column to the test data for later replay
-test_data = test_data.update("TimeStamp = (DBDateTime)timestamp_from_offset(Time)")
+test_data = test_data.update("TimeStamp = (DateTime)timestamp_from_offset(Time)")
 
 # This placeholder will be replaced by our trained DBSCAN model
 db = 0
