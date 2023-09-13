@@ -16,3 +16,7 @@ It uses DBSCAN to identify fraudulent purchases as spatial outliers amongst vali
 ### Launch
 
 To run this application, you can either get started with Deephaven by doing [install Deephaven from pre-built images](https://deephaven.io/core/docs/tutorials/quickstart/) or [build from source](https://deephaven.io/core/docs/how-to-guides/launch-build/).  If you choose this route, you will have to [add Python packages](https://deephaven.io/core/docs/how-to-guides/install-python-packages/) that the code uses.  You can also clone this repository, and run the shell file found in the base directory.
+
+### Note
+
+This application was last updated in December of 2021, when Deephaven Community Core version 0.7.0 was the lastest. The code found in this repository is only guaranteed to work with Deephaven version 0.7.0 or earlier.
